@@ -21,5 +21,16 @@ def generate_launch_description():
                 "cam_base_topic":"/pi_camera/image_raw",
                 "marker_dict":"5X5_1000"
             }]
+        ),
+        Node(
+            package="joy",
+            executable="joy_node",
+            name="joy_node",
+            output="screen",
+            parameters=[{
+                "dev": "/dev/input/js0",  
+                "deadzone": 0.05,
+                "autorepeat_rate": 20.0
+            }]
         )
     ])

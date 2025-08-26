@@ -22,7 +22,8 @@ setup(
     license='MIT',
     entry_points={
         'console_scripts': [
-            "px4_driver = imav25.px4_driver:main"
+            "px4_driver = imav25.px4_driver:main",
+            "move_drone = imav25.move_drone:main"
         ],
     },
 )
