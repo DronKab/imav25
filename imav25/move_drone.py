@@ -38,7 +38,6 @@ class MoveDroneNode(Node):
             pitch  = msg.axes[0]  # pitch
             yaw = msg.axes[3]  # yaw
             z = msg.axes[4]  # z
-
             
             twist.linear.x = roll * self.get_parameter('scale_linear').value
             twist.linear.y = pitch * self.get_parameter('scale_linear').value
@@ -47,7 +46,6 @@ class MoveDroneNode(Node):
 
             self.cmd_pub.publish(twist)
 
-        
         else:
             # Si no está presionado el botón, publica Twist en 0 para que el dron se mantenga quieto
             twist = Twist()
