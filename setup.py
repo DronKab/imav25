@@ -23,7 +23,8 @@ setup(
     entry_points={
         'console_scripts': [
             "px4_driver = imav25.px4_driver:main",
-            "move_drone = imav25.move_drone:main"
+            "move_drone = imav25.move_drone:main",
+            "take_photos = imav25.take_photos:main"
         ],
     },
 )
