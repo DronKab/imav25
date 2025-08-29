@@ -42,8 +42,6 @@ class CrossTunnelNode(Node):
 
         # Timer para control cada 20 ms (50 Hz)
         self.timer = self.create_timer(self.ts, self.control_loop)
-
-        # Último tiempo para derivada
         self.last_time = time.time()
 
     def error_callback(self, msg: Int32MultiArray):
@@ -55,7 +53,7 @@ class CrossTunnelNode(Node):
         current_time = time.time()
         dt = current_time - self.last_time
         if dt <= 0.0:
-            dt = self.ts  # fallback
+            dt = self.ts  
         self.last_time = current_time
         self.prev_error_x = self.x_error
         self.prev_error_y = self.y_error

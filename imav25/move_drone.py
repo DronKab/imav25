@@ -10,11 +10,9 @@ class MoveDroneNode(Node):
         super().__init__('move_drone')
         self.get_logger().info('move_drone node started')
 
-        # Publicador a /px4_driver/cmd_vel
         self.cmd_pub = self.create_publisher(Twist, '/px4_driver/cmd_vel', 10)
         self.do_height_control_pub = self.create_publisher(Bool, "/px4_driver/do_height_control", 10)
 
-        # Suscripción a /joy
         self.joy_sub = self.create_subscription(Joy, '/joy', self.joy_callback, 10)
 
         self.declare_parameter("do_height_control", False)
@@ -23,7 +21,7 @@ class MoveDroneNode(Node):
         # Parámetros de escalado
         self.declare_parameter('scale_linear', 1.0)
         self.declare_parameter('scale_angular', 1.0)
-        self.declare_parameter('enable_button', 4)  # L1 por defecto
+        self.declare_parameter('enable_button', 4)  
 
     def joy_callback(self, msg: Joy):
         enable_button = self.get_parameter('enable_button').value
@@ -32,7 +30,6 @@ class MoveDroneNode(Node):
         do_height_control_msg.data = self.do_height_control
         self.do_height_control_pub.publish(do_height_control_msg)
 
-        # Solo se mueve si se mantiene presionado el botón de habilitación
         if enable_button < len(msg.buttons) and msg.buttons[enable_button] == 1:
             roll  = msg.axes[4]  # roll
             pitch  = msg.axes[3]  # pitch
@@ -47,7 +44,6 @@ class MoveDroneNode(Node):
             self.cmd_pub.publish(twist)
 
         else:
-            # Si no está presionado el botón, publica Twist en 0 para que el dron se mantenga quieto
             twist = Twist()
             self.cmd_pub.publish(twist)
 

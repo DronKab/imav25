@@ -35,7 +35,7 @@ class TunnelDetectNode(Node):
         self.classes = ["wide_tunnel", "medium_tunnel", "small_tunnel"]
 
         # Definir túnel objetivo
-        self.goal_tunnel = "wide_tunnel"   # Cambia según necesidad
+        self.goal_tunnel = "wide_tunnel"  
 
     def preprocess(self, frame):
         # Redimensionar a 640x640 (como espera el modelo)

@@ -12,8 +12,8 @@ class TakePhotosNode(Node):
         self.get_logger().info('take_photos node started')
 
         self.bridge = CvBridge()
-        self.last_saved_time = 0.0   # último instante en que guardaste
-        self.save_interval = 0.5     # segundos entre capturas
+        self.last_saved_time = 0.0  
+        self.save_interval = 0.5   
 
         # Suscripción a la cámara
         # self.subscription = self.create_subscription(CompressedImage, '/camera/image_raw/compressed', self.listener_callback, 10) #fisico webcam
@@ -32,7 +32,7 @@ class TakePhotosNode(Node):
             filename = f"image_{timestamp}.png"
             cv2.imwrite(filename, current_frame)
             self.get_logger().info(f"Imagen guardada como {filename}")
-            self.last_saved_time = current_time  # actualizar el último guardado
+            self.last_saved_time = current_time 
 
 def main(args=None):
     rclpy.init(args=args)

@@ -12,21 +12,13 @@ class PlatformLandingNode(Node):
         self.x_error = 0
         self.y_error = 0
 
-        # Suscriptor al tópico de errores
-        self.error_sub = self.create_subscription(
-            Int32MultiArray,
-            '/platform_error',
-            self.error_callback,
-            10
-        )
+        self.error_sub = self.create_subscription(Int32MultiArray, '/platform_error', self.error_callback, 10)
 
     def error_callback(self, msg: Int32MultiArray):
-        # Guardar errores en variables
         if len(msg.data) >= 2:
             self.x_error = msg.data[0]
             self.y_error = msg.data[1]
 
-        # Imprimir errores en la terminal
         self.get_logger().info(f"x_error: {self.x_error}, y_error: {self.y_error}")
 
 def main(args=None):
