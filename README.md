@@ -1,4 +1,4 @@
-# imav24
+# imav25
 
 Indoor ROS2 nodes for IMAV25.
 
