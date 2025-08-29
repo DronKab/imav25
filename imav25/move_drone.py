@@ -34,10 +34,10 @@ class MoveDroneNode(Node):
 
         # Solo se mueve si se mantiene presionado el botón de habilitación
         if enable_button < len(msg.buttons) and msg.buttons[enable_button] == 1:
-            roll  = msg.axes[1]  # roll
-            pitch  = msg.axes[0]  # pitch
-            yaw = msg.axes[3]  # yaw
-            z = msg.axes[4]  # z
+            roll  = msg.axes[4]  # roll
+            pitch  = msg.axes[3]  # pitch
+            yaw = msg.axes[0]  # yaw
+            z = msg.axes[1]  # z
             
             twist.linear.x = roll * self.get_parameter('scale_linear').value
             twist.linear.y = pitch * self.get_parameter('scale_linear').value

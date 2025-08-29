@@ -24,7 +24,11 @@ setup(
         'console_scripts': [
             "px4_driver = imav25.px4_driver:main",
             "move_drone = imav25.move_drone:main",
-            "take_photos = imav25.take_photos:main"
+            "take_photos = imav25.take_photos:main",
+            "tunnel_detect = imav25.tunnel_detect:main",
+            "platform_detect = imav25.platform_detect:main",
+            "landing_platform = imav25.landing_platform:main",
+            "cross_tunnel = imav25.cross_tunnel:main"
         ],
     },
 )
