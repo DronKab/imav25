@@ -18,7 +18,7 @@ def generate_launch_description():
             executable="aruco_tracker_autostart",
             output="screen",
             parameters=[{
-                "cam_base_topic":"/pi_camera/image_raw",
+                "cam_base_topic":"/camera/image_raw",
                 "marker_dict":"5X5_1000"
             }]
         ),
