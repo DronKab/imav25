@@ -28,7 +28,8 @@ setup(
             "tunnel_detect = imav25.tunnel_detect:main",
             "platform_detect = imav25.platform_detect:main",
             "landing_platform = imav25.landing_platform:main",
-            "cross_tunnel = imav25.cross_tunnel:main"
+            "cross_tunnel = imav25.cross_tunnel:main",
+            "keyboard = imav25.keyboard:main"
         ],
     },
 )

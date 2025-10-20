@@ -40,7 +40,10 @@ def generate_launch_description():
             package='robot_state_publisher',
             executable='robot_state_publisher',
             name='robot_state_publisher',
-            parameters=[{'robot_description': robot_desc}],
+            parameters=[
+                {'robot_description': robot_desc},
+                #{'frame_prefix': 'x500_0/'}
+        ],
             output='screen'
         ),
         Node(
@@ -49,6 +52,14 @@ def generate_launch_description():
             name='joint_state_publisher',
             output='screen'
         ),
+        Node(
+            package='tf2_ros',
+            executable='static_transform_publisher',
+            name='lidar_frame_bridge',
+            arguments=['0', '0', '0', '0', '0', '0', 'lidar_link/lidar_2d_v2', 'x500_0/lidar_link/lidar_2d_v2'],
+            output='screen'
+        ),
+
         Node(
             package='rviz2',
             executable='rviz2',
