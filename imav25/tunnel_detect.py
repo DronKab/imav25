@@ -35,6 +35,7 @@ class TunnelDetectNode(Node):
         self.classes = ["wide_tunnel", "medium_tunnel", "small_tunnel"]
 
         # Definir túnel objetivo
+        # self.goal_tunnel = "medium_tunnel"
         self.goal_tunnel = "wide_tunnel"  
 
     def preprocess(self, frame):
@@ -88,9 +89,7 @@ class TunnelDetectNode(Node):
                 cam_center_y = h // 2
                 x_error = bbox_center_x - cam_center_x
                 y_error = bbox_center_y - cam_center_y
-                self.get_logger().info(
-                    f"Goal tunnel detected. x_error={x_error}, y_error={y_error}"
-                )
+                # self.get_logger().info(f"Goal tunnel detected. x_error={x_error}, y_error={y_error}")
 
         return frame, x_error, y_error
 

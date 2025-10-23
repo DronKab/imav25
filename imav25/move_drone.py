@@ -19,8 +19,8 @@ class MoveDroneNode(Node):
         self.do_height_control = self.get_parameter("do_height_control").get_parameter_value().bool_value
 
         # Parámetros de escalado
-        self.declare_parameter('scale_linear', 1.0)
-        self.declare_parameter('scale_angular', 1.0)
+        self.declare_parameter('scale_linear', 2.0)
+        self.declare_parameter('scale_angular', 2.0)
         self.declare_parameter('enable_button', 4)  
 
     def joy_callback(self, msg: Joy):
