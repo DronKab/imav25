@@ -1,180 +1,126 @@
 #!/usr/bin/env python3
-import sys
-
-import geometry_msgs.msg
 import rclpy
-import std_msgs.msg
-
-from rclpy.qos import QoSProfile, QoSReliabilityPolicy, QoSHistoryPolicy, QoSDurabilityPolicy
-
-if sys.platform == 'win32':
-    import msvcrt
-else:
-    import termios
-    import tty
+from rclpy.node import Node
+from geometry_msgs.msg import Twist
+from std_msgs.msg import Bool
+from std_msgs.msg import Empty
+import pygame
+import threading
+import time
 
 
-msg = """
-This node takes keypresses from the keyboard and publishes them
-as Twist messages. 
-Using the arrow keys and WASD you have Mode 2 RC controls.
-W: Up
-S: Down
-A: Yaw Left
-D: Yaw Right
-Up Arrow: Pitch Forward
-Down Arrow: Pitch Backward
-Left Arrow: Roll Left
-Right Arrow: Roll Right
+class PygameMoveDrone(Node):
+    def __init__(self):
+        super().__init__('keyboard_move_drone')
+        self.get_logger().info('Keyboard control node (pygame) started')
 
-Press SPACE to arm/disarm the drone
-"""
+        # Publishers
+        self.cmd_pub = self.create_publisher(Twist, '/cmd_vel', 10)
+        self.height_pub = self.create_publisher(Bool, '/px4_driver/do_height_control', 10)
 
-moveBindings = {
-    'w': (0, 0, 1, 0), #Z+
-    's': (0, 0, -1, 0),#Z-
-    'a': (0, 0, 0, -1), #Yaw+
-    'd': (0, 0, 0, 1),#Yaw-
-    '\x1b[A' : (0, 1, 0, 0),  #Up Arrow
-    '\x1b[B' : (0, -1, 0, 0), #Down Arrow
-    '\x1b[C' : (-1, 0, 0, 0), #Right Arrow
-    '\x1b[D' : (1, 0, 0, 0),  #Left Arrow
-}
+        self.arm_pub = self.create_publisher(Empty, '/px4_driver/takeoff', 10)
 
+        # Parameters
+        self.declare_parameter('scale_linear', 2.0)
+        self.declare_parameter('scale_angular', 2.0)
+        self.declare_parameter('do_height_control', False)
 
-speedBindings = {
-    # 'q': (1.1, 1.1),
-    # 'z': (.9, .9),
-    # 'w': (1.1, 1),
-    # 'x': (.9, 1),
-    # 'e': (1, 1.1),
-    # 'c': (1, .9),
-}
+        self.do_height_control = self.get_parameter('do_height_control').value
+        self.running = True
+        self.twist = Twist()
 
+        # Start pygame in another thread (non-blocking)
+        self.key_thread = threading.Thread(target=self.keyboard_loop, daemon=True)
+        self.key_thread.start()
 
-def getKey(settings):
-    if sys.platform == 'win32':
-        # getwch() returns a string on Windows
-        key = msvcrt.getwch()
-    else:
-        tty.setraw(sys.stdin.fileno())
-        # sys.stdin.read() returns a string on Linux
-        key = sys.stdin.read(1)
-        if key == '\x1b':  # if the first character is \x1b, we might be dealing with an arrow key
-            additional_chars = sys.stdin.read(2)  # read the next two characters
-            key += additional_chars  # append these characters to the key
-        termios.tcsetattr(sys.stdin, termios.TCSADRAIN, settings)
-    return key
+        # Publish rate
+        self.timer = self.create_timer(0.1, self.publish_cmd)
 
+    def keyboard_loop(self):
+        pygame.init()
+        pygame.display.set_mode((200, 100))
+        pygame.display.set_caption("Drone Keyboard Control (Press ESC to quit)")
 
+        linear_speed = self.get_parameter('scale_linear').value
+        angular_speed = self.get_parameter('scale_angular').value
 
-def saveTerminalSettings():
-    if sys.platform == 'win32':
-        return None
-    return termios.tcgetattr(sys.stdin)
+        self.get_logger().info(
+            "Controls:\n"
+            "W/S: forward/back\n"
+            "A/D: left/right\n"
+            "↑/↓: ascend/descend\n"
+            "Q/E: yaw left/right\n"
+            "ESC: quit"
+        )
 
+        while self.running:
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    self.running = False
+                elif event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
+                    self.running = False
 
-def restoreTerminalSettings(old_settings):
-    if sys.platform == 'win32':
-        return
-    termios.tcsetattr(sys.stdin, termios.TCSADRAIN, old_settings)
+             
 
+            # Reset twist
+            twist = Twist()
+            keys = pygame.key.get_pressed()
 
-def vels(speed, turn):
-    return 'currently:\tspeed %s\tturn %s ' % (speed, turn)
-
-
-def main():
-    settings = saveTerminalSettings()
-
-    rclpy.init()
-
-    node = rclpy.create_node('teleop_twist_keyboard')
-
-    qos_profile = QoSProfile(
-        reliability=QoSReliabilityPolicy.BEST_EFFORT,
-        durability=QoSDurabilityPolicy.TRANSIENT_LOCAL,
-        history=QoSHistoryPolicy.KEEP_LAST,
-        depth=10
-    )
-
-
-    pub = node.create_publisher(geometry_msgs.msg.Twist, '/px4_driver/cmd_vel', 10)
-
-    arm_toggle = False
-    arm_pub = node.create_publisher(std_msgs.msg.Empty, '/px4_driver/takeoff', 10)
-
-    
-
-
-    speed = 0.8
-    turn = .2
-    x = 0.0
-    y = 0.0
-    z = 0.0
-    th = 0.0
-    status = 0.0
-    x_val = 0.0
-    y_val = 0.0
-    z_val = 0.0
-    yaw_val = 0.0
-
-    try:
-        print(msg)
-        # print(vels(speed, turn))
-        while True:
-            key = getKey(settings)
-            if key in moveBindings.keys():
-                x = moveBindings[key][0]
-                y = moveBindings[key][1]
-                z = moveBindings[key][2]
-                th = moveBindings[key][3]
-            
-            else:
-                x = 0.0
-                y = 0.0
-                z = 0.0
-                th = 0.0
-                if (key == '\x03'):
-                    break
-
-            if key == ' ':  # ASCII value for space
+            if keys == pygame.K_0:  # ASCII value for space
                 #arm_toggle = not arm_toggle  # Flip the value of arm_toggle
-                arm_msg = std_msgs.msg.Empty()  # Nota los paréntesis
-                arm_pub.publish(arm_msg)
+                arm_msg = Empty()  # Nota los paréntesis
+                self.arm_pub.publish(arm_msg)
 
-                #print(f"Arm toggle is now: {arm_toggle}")
+            # --- Linear X (forward/back) ---
+            if keys[pygame.K_w]:
+                twist.linear.x = linear_speed
+            elif keys[pygame.K_s]:
+                twist.linear.x = -linear_speed
 
-            twist = geometry_msgs.msg.Twist()
-            
-            x_val = (x * speed) + x_val
-            y_val = (y * speed) + y_val
-            z_val = (z * speed) + z_val
-            yaw_val = (th * turn) + yaw_val
-            twist.linear.x = x_val
-            twist.linear.y = y_val
-            twist.linear.z = z_val # se modifo esta linea por z_val
-            twist.angular.x = 0.0
-            twist.angular.y = 0.0
-            twist.angular.z = yaw_val
-            pub.publish(twist)
-            print("X:",twist.linear.x, "   Y:",twist.linear.y, "   Z:",twist.linear.z, "   Yaw:",twist.angular.z)
-            
+            # --- Linear Y (left/right) ---
+            if keys[pygame.K_a]:
+                twist.linear.y = linear_speed
+            elif keys[pygame.K_d]:
+                twist.linear.y = -linear_speed
 
-    except Exception as e:
-        print(e)
+            # --- Linear Z (up/down) ---
+            if keys[pygame.K_UP]:
+                twist.linear.z = linear_speed
+            elif keys[pygame.K_DOWN]:
+                twist.linear.z = -linear_speed
 
-    finally:
-        twist = geometry_msgs.msg.Twist()
-        twist.linear.x = 0.0
-        twist.linear.y = 0.0
-        twist.linear.z = 0.0
-        twist.angular.x = 0.0
-        twist.angular.y = 0.0
-        twist.angular.z = 0.0
-        pub.publish(twist)
+            # --- Angular Z (yaw) ---
+            if keys[pygame.K_q]:
+                twist.angular.z = angular_speed
+            elif keys[pygame.K_e]:
+                twist.angular.z = -angular_speed
 
-        restoreTerminalSettings(settings)
+            self.twist = twist
+            time.sleep(0.05)
+
+        pygame.quit()
+        self.get_logger().info("Keyboard control stopped")
+
+    def publish_cmd(self):
+        if not self.running:
+            rclpy.shutdown()
+            return
+
+        # Publish height control state
+        msg = Bool()
+        msg.data = True
+        self.height_pub.publish(msg)
+
+        # Publish twist command
+        self.cmd_pub.publish(self.twist)
+
+
+def main(args=None):
+    rclpy.init(args=args)
+    node = PygameMoveDrone()
+    rclpy.spin(node)
+    node.destroy_node()
+    rclpy.shutdown()
 
 
 if __name__ == '__main__':

@@ -64,7 +64,7 @@ class PX4Driver(Node):
         self.takeoff_subscriber = self.create_subscription(Empty, "/px4_driver/takeoff", self.take_off, 10)
         self.arm_subscriber = self.create_subscription(Empty, "/px4_driver/arm", self.arm, 10)
         self.land_subscriber = self.create_subscription(Empty, "/px4_driver/land", self.land, 10)
-        self.velocity_subscriber = self.create_subscription(Twist, "/px4_driver/cmd_vel", self.cmd_vel, 10)
+        self.velocity_subscriber = self.create_subscription(Twist, "/cmd_vel", self.cmd_vel, 10)
         self.position_subscriber = self.create_subscription(Pose, "/px4_driver/cmd_pos", self.cmd_pos, 10)
         self.height_subscriber = self.create_subscription(Float32, "/px4_driver/target_height", self.change_height_target, 10)
         self.do_height_control_subscriber = self.create_subscription(Bool, "/px4_driver/do_height_control", self.change_do_height_control, 10)
@@ -300,7 +300,7 @@ class PX4Driver(Node):
         # Rotate Twist msg
         # self.get_logger().info(f"---\nReceived:\nX = {msg.linear.x}\nY = {msg.linear.y}")
         v = Vector3()
-        v.x, v.y, v.z = msg.linear.x, -msg.linear.y, 0.0
+        v.x, v.y, v.z = msg.linear.x, msg.linear.y, 0.0
         rotated_twist = self.rotate_vector(self.last_tf.transform.rotation, v)
 
         # Set velocity setpoint
@@ -314,7 +314,8 @@ class PX4Driver(Node):
         self.current_setpoint.velocity[0] = rotated_twist.x
         self.current_setpoint.velocity[1] = rotated_twist.y
         self.current_setpoint.velocity[2] = -msg.linear.z
-        self.current_setpoint.yawspeed = msg.angular.z
+        self.current_setpoint.yawspeed = -msg.angular.z
+
 
     # Send hearbeat and current setpoint (this signal must be sent constantly when in offboard mode, in a frecuency >= 2 Hz)
     def heartbeat(self):
