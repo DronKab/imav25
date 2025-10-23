@@ -17,10 +17,10 @@ class TakePhotosNode(Node):
 
         # Suscripción a la cámara
         # self.subscription = self.create_subscription(CompressedImage, '/camera/image_raw/compressed', self.listener_callback, 10) #fisico webcam
-        # self.subscription = self.create_subscription(Image, '/camera/image_raw', self.listener_callback, 10) # simulado webcam 
+        self.subscription = self.create_subscription(Image, '/camera/image_raw', self.listener_callback, 10) # simulado webcam 
 
         # self.image_sub = self.create_subscription(CompressedImage, '/pi_camera/image_raw/compressed', self.listener_callback, 10) # fisico picamera 
-        self.image_sub = self.create_subscription(Image, '/pi_camera/image_raw', self.listener_callback, 10) # simulado picamera
+        # self.image_sub = self.create_subscription(Image, '/pi_camera/image_raw', self.listener_callback, 10) # simulado picamera
 
 
     def listener_callback(self, data):

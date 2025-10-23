@@ -30,6 +30,11 @@ setup(
             "landing_platform = imav25.landing_platform:main",
             "cross_tunnel = imav25.cross_tunnel:main",
             "keyboard = imav25.keyboard:main"
+            "aruco_control = imav25.aruco_control:main",
+            "save_pos = imav25.save_pos:main",
+            "save_pos_image = imav25.save_pos_image:main",
+            "whiteboard_detect = imav25.whiteboard_detect:main",
+            "goto_whiteboard = imav25.goto_whiteboard:main"
         ],
     },
 )

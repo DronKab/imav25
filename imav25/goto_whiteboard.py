@@ -5,10 +5,10 @@ from std_msgs.msg import Int32MultiArray, Bool
 from geometry_msgs.msg import Twist
 import time
 
-class CrossTunnelNode(Node):
+class GotoWhiteboardNode(Node):
     def __init__(self):
-        super().__init__('cross_tunnel')
-        self.get_logger().info('cross_tunnel node started')
+        super().__init__('goto_whiteboard')
+        self.get_logger().info('whiteboard node started')
 
         # Inicializar errores
         self.x_error = 0
@@ -38,7 +38,7 @@ class CrossTunnelNode(Node):
         self.do_height_control_pub = self.create_publisher(Bool, "/px4_driver/do_height_control", 10)
 
         # Subscriber de errores
-        self.error_sub = self.create_subscription(Int32MultiArray, '/tunnel_error', self.error_callback, 10)
+        self.error_sub = self.create_subscription(Int32MultiArray, '/whiteboard_error', self.error_callback, 10)
 
         # Timer para control cada 20 ms (50 Hz)
         self.timer = self.create_timer(self.ts, self.control_loop)
@@ -90,7 +90,7 @@ class CrossTunnelNode(Node):
         else:
             x_vel = 0.0
             y_vel = 0.0
-            z_vel = 0.3
+            z_vel = 0.5
 
         if(abs(x_vel) > self.max_vel):
             if(x_vel < 0):
@@ -123,7 +123,7 @@ class CrossTunnelNode(Node):
 
 def main(args=None):
     rclpy.init(args=args)
-    node = CrossTunnelNode()
+    node = GotoWhiteboardNode()
     rclpy.spin(node)
     node.destroy_node()
     rclpy.shutdown()
