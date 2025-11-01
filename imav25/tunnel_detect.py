@@ -26,7 +26,7 @@ class TunnelDetectNode(Node):
         self.error_pub = self.create_publisher(Int32MultiArray, '/tunnel_error', 10)
 
         # Cargar modelo ONNX
-        self.model_path = 'best_tunnel_export.onnx'
+        self.model_path = 'best_tunnel.onnx'
         self.session = ort.InferenceSession(self.model_path, providers=['CPUExecutionProvider'])
         self.input_name = self.session.get_inputs()[0].name
         self.get_logger().info(f'Model loaded. Input name: {self.input_name}')

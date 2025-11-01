@@ -34,7 +34,8 @@ setup(
             "save_pos = imav25.save_pos:main",
             "save_pos_image = imav25.save_pos_image:main",
             "whiteboard_detect = imav25.whiteboard_detect:main",
-            "goto_whiteboard = imav25.goto_whiteboard:main"
+            "goto_whiteboard = imav25.goto_whiteboard:main",
+            "goto_zone = imav25.goto_zone:main"
         ],
     },
 )

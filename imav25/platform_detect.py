@@ -27,7 +27,7 @@ class PlatformDetectNode(Node):
         self.error_pub = self.create_publisher(Int32MultiArray, '/platform_error', 10)
 
         # Cargar modelo ONNX
-        self.model_path = 'best_plataforma_export.onnx'  # Cambia esta ruta si es necesario
+        self.model_path = 'best_plataforma.onnx'  # Cambia esta ruta si es necesario
         self.session = ort.InferenceSession(self.model_path, providers=['CPUExecutionProvider'])
         self.input_name = self.session.get_inputs()[0].name
         self.get_logger().info(f'Model loaded. Input name: {self.input_name}')

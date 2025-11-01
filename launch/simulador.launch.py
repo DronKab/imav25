@@ -32,20 +32,5 @@ def generate_launch_description():
                 "deadzone": 0.05,
                 "autorepeat_rate": 20.0
             }]
-        ),
-        Node(
-            package="imav25",
-            executable="move_drone",
-            output="screen"
-        ),
-        Node(
-            package="imav25",
-            executable="tunnel_detect",
-            output="screen"
-        ), 
-        Node(
-            package="imav25",
-            executable="whiteboard_detect",
-            output="screen"
         )
     ])
