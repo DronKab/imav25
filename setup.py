@@ -29,6 +29,7 @@ setup(
             "platform_detect = imav25.platform_detect:main",
             "landing_platform = imav25.landing_platform:main",
             "cross_tunnel = imav25.cross_tunnel:main",
+            "keyboard = imav25.keyboard:main"
             "aruco_control = imav25.aruco_control:main",
             "save_pos = imav25.save_pos:main",
             "save_pos_image = imav25.save_pos_image:main",
