@@ -34,17 +34,5 @@ def generate_launch_description():
                 "video_device":"/dev/video2",
                 "image_size":[320, 240]
             }]
-        ),
-        Node(
-            package="v4l2_camera",
-            executable="v4l2_camera_node",
-            output="screen",
-            remappings=[
-                ("__ns","/camera")
-            ],
-            parameters=[{
-                "video_device":"/dev/video0",
-                "image_size":[320, 249]
-            }]
         )
     ])
