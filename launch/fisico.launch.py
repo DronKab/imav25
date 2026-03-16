@@ -9,7 +9,7 @@ def generate_launch_description():
             output="log"
         ),
         Node(
-            package="tmr25",
+            package="imav25",
             executable="px4_driver",
             output="screen"
         ),

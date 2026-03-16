@@ -18,31 +18,37 @@ class NodeState(State):
         self.yaw = yaw
 
     def execute(self, userdata):
+        node = None
         try:
-            node = GotoZone(x_tar=self.x, y_tar=self.y, yaw_tar=self.yaw)
+            #rclpy.init()
+            node = GotoZone(self.x, self.y, self.yaw)
+            node.run()
             rclpy.spin(node)
         except ExitOk:
-            node.destroy_node()
+            if node:
+                node.destroy_node()
+            # rclpy.shutdown()
             return "succeeded"
         except Exception as e:
-            print(f"Error: {e}")
+            print(f"[GOTO_ZONE ERROR]: {e}")
+            if node:
+                node.destroy_node()
+            # rclpy.shutdown()
             return "aborted"
+
 
 class GotoZone(Node):
     def __init__(self, x_tar=0.0, y_tar=0.0, yaw_tar=90):
         super().__init__('goto_zone')
-        self.get_logger().info('goto_zone node started')
-
         self.x_tar = x_tar
         self.y_tar = y_tar
         self.yaw_tar = yaw_tar
-
         self.navigator = BasicNavigator()
 
-        self.get_logger().info("Esperando a Nav2...")
+    def run(self):
+        self.get_logger().info("Esperando Nav2...")
         self.navigator.waitUntilNav2Active()
         self.get_logger().info("Nav2 activo — enviando objetivo")
-
         self.go_to_goal(self.x_tar, self.y_tar, self.yaw_tar)
 
     def go_to_goal(self, x, y, yaw_deg):
@@ -70,21 +76,29 @@ class GotoZone(Node):
         result = self.navigator.getResult()
 
         if result == TaskResult.SUCCEEDED:
-            self.get_logger().info("Se ha logrado")
+            self.get_logger().info("Objetivo alcanzado")
             raise ExitOk
 
         elif result == TaskResult.CANCELED:
-            self.get_logger().info("Cancelado")
-
+            self.get_logger().info("Trayectoria cancelada")
         else:
             self.get_logger().info("Fallo al alcanzar objetivo")
+            raise Exception("Falló la navegación")
 
 def main(args=None):
     rclpy.init(args=args)
-    node = GotoZone()
-    rclpy.spin(node)
-    node.destroy_node()
-    rclpy.shutdown()
+    try:
+        node = GotoZone(0.5, -0.5, 90)  # Valores de prueba
+        node.run()
+        rclpy.spin(node)
+    except ExitOk:
+        pass
+    finally:
+        node.destroy_node()
+        rclpy.shutdown()
 
-if __name__ == '__main__':
-    main()
+if __name__ == "__main__":
+    try:
+        main()
+    except Exception as e:
+        print(e)

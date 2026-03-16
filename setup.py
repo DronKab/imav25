@@ -37,7 +37,8 @@ setup(
             "goto_whiteboard = imav25.goto_whiteboard:main",
             "goto_zone = imav25.goto_zone:main",
             "start_msg = imav24.start_msg:main",
-            "indoor_smach = imav25.indoor_smach:main"
+            "indoor_smach = imav25.indoor_smach:main",
+            "nav2_pose = imav25.nav2_pose:main"
         ],
     },
 )

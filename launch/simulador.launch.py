@@ -23,6 +23,21 @@ def generate_launch_description():
             }]
         ),
         Node(
+            package="imav25",
+            executable="tunnel_detect",
+            output="screen"
+        ),
+        Node(
+            package="imav25",
+            executable="platform_detect",
+            output="screen"
+        ),
+        Node(
+            package="imav25",
+            executable="move_drone",
+            output="screen"
+        ),
+        Node(
             package="joy",
             executable="joy_node",
             name="joy_node",
