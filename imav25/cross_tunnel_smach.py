@@ -132,10 +132,6 @@ class CrossTunnelNode(Node):
             f"Vel -> x: {x_vel:.3f}, y: {y_vel:.3f}, z: {z_vel:.3f}"
         )
 
-    def stop_drone(self):
-        twist = Twist()
-        self.cmd_pub.publish(twist)
-
 def main(args=None):
     rclpy.init(args=args)
     node = CrossTunnelNode()
