@@ -10,7 +10,7 @@ class NodeState(State):
 
     def execute(self, userdata):
         try:
-            node = NodeStart()
+            node = StartNode()
             rclpy.spin(node)
         except ExitOk:
             node.destroy_node()
@@ -31,7 +31,7 @@ class StartNode(Node):
 
 def main(args=None):
     rclpy.init(args=args)
-    node = NodeStart()
+    node = StartNode()
 
     rclpy.spin(node)
     

@@ -125,9 +125,10 @@ class VisualDroneControlNode(Node):
         self.height_ctrl_pub.publish(h_msg)
 
         x_vel, y_vel = 0.0, 0.0
-        threshold = 30 if self.action_flag else 100
+        threshold = 50 if self.action_flag else 100
 
-        if abs(self.current_x_error) > threshold or abs(self.current_y_error) > threshold:
+
+        if abs(self.current_x_error) > threshold or (abs(self.current_y_error) > threshold and self.pos_flag == False):
             deriv_x = (self.current_x_error - self.prev_error_x) / dt
             x_vel = (self.kp_x * self.current_x_error) + (self.kd_x * deriv_x)
 
@@ -167,7 +168,7 @@ class VisualDroneControlNode(Node):
         self.prev_error_y = self.current_y_error
 
         # Condición de salida para SMACH (ejemplo: 50 iteraciones centrado)
-        if self.exit_counter > 75:
+        if self.exit_counter > 40:
             raise ExitOk
 
 

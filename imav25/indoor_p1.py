@@ -30,10 +30,10 @@ class IndoorSmach(Node):
             smach.Sequence.add("DELAY_TAKEOFF", smach.CBState(self.delay, input_keys=["secs"], cb_args=[10], outcomes=["succeeded"]))
 
             # Altura para tuneles (verificar altura necesaria (o si es necesario ajustar altura)
-            smach.Sequence.add("HEIGHT_takeoff", smach.CBState(self.control_height, input_keys=["altura"], cb_args=[1.5], outcomes=["succeeded"]))
+            smach.Sequence.add("HEIGHT_takeoff", smach.CBState(self.control_height, input_keys=["altura"], cb_args=[1.3], outcomes=["succeeded"]))
             
             # Centrarse en tunel (nice)
-            smach.Sequence.add("CTRL_VIS_TUNNEL", ctrl_vision.CtrlVisNodeState(target_class="tunnel", action_flag=True, pos_flag=True))
+            smach.Sequence.add("CTRL_VIS_TUNNEL", ctrl_vision.CtrlVisNodeState(target_class="Azul", action_flag=True, pos_flag=True))
 
             # Cruzar tunel (distancia necesaria para cruzar tuneles)
             smach.Sequence.add("CROSS_TUNNEL", fly_drone.NodeState(x=3.0, y=0.0, yaw=0.0))

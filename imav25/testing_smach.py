@@ -18,8 +18,21 @@ class IndoorSmach(Node):
         sq = smach.Sequence(outcomes=["succeeded", "aborted", "preempted"], connector_outcome="succeeded")
 
         with sq:
-            # Centrarse en tunel (nice)
-            smach.Sequence.add("CTRL_VIS_TUNNEL", ctrl_vision.CtrlVisNodeState(target_class="Azul", action_flag=True, pos_flag=True))
+            # Mensaje para comenzar (nice)
+            smach.Sequence.add("WAIT_FOR_START_MSG", start_msg.NodeState())
+            # el mensaje que se publica es: ros2 topic pub --once /wait_start_msg std_msgs/msg/Empty
+            
+            # Take off (nice)
+            smach.Sequence.add("INITIAL TAKEOFF", smach.CBState(self.takeoff, outcomes=["succeeded"]))
+
+            smach.Sequence.add("DELAY_TAKEOFF", smach.CBState(self.delay, input_keys=["secs"], cb_args=[10], outcomes=["succeeded"]))
+
+            # Altura para tuneles (verificar altura necesaria (o si es necesario ajustar altura)
+            smach.Sequence.add("HEIGHT_takeoff", smach.CBState(self.control_height, input_keys=["altura"], cb_args=[1.3], outcomes=["succeeded"]))
+            
+            # Centrarse en aruco para pintar tu raya (verificar distancias x,y,z NOTA: las distancias son conforme 
+            # al marco de referencia del ARUCO no del DRON)
+            smach.Sequence.add("ARUCO_CONTROL", aruco_control_state.NodeState(x_distance=0.0, y_distance=0.0, z_distance=1.0))
 
 
         # Start server for state machine visualization

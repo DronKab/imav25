@@ -3,7 +3,7 @@ from rclpy.node import Node
 import smach
 import smach_ros
 import time 
-from imav25 import start_msg, goto_zone, ctrl_vision, aruco_control, fly_drone
+from imav25 import start_msg, goto_zone, ctrl_vision, fly_drone, aruco_control_state
 from std_msgs.msg import Empty, Float32
 
 class IndoorSmach(Node):
@@ -28,23 +28,23 @@ class IndoorSmach(Node):
             smach.Sequence.add("DELAY_TAKEOFF", smach.CBState(self.delay, input_keys=["secs"], cb_args=[10], outcomes=["succeeded"]))
 
             # Altura para tuneles (verificar altura necesaria (o si es necesario ajustar altura)
-            smach.Sequence.add("HEIGHT_takeoff", smach.CBState(self.control_height, input_keys=["altura"], cb_args=[1.5], outcomes=["succeeded"]))
+            smach.Sequence.add("HEIGHT_takeoff", smach.CBState(self.control_height, input_keys=["altura"], cb_args=[1.3], outcomes=["succeeded"]))
             
             # Centrarse en tunel (nice)
-            smach.Sequence.add("CTRL_VIS_TUNNEL", ctrl_vision.CtrlVisNodeState(target_class="tunnel", action_flag=True, pos_flag=True))
+            smach.Sequence.add("CTRL_VIS_TUNNEL", ctrl_vision.CtrlVisNodeState(target_class="Azul", action_flag=True, pos_flag=True))
 
             # Cruzar tunel (distancia necesaria para cruzar tuneles)
             smach.Sequence.add("CROSS_TUNNEL", fly_drone.NodeState(x=3.0, y=0.0, yaw=0.0))
 
             # Acercarse a obstaculos (punto para acercarse a obstaculos) ver hacia el pizarron
-            smach.Sequence.add("GO_TO_OBSTACLES", fly_drone.NodeState(x=0.0, y=0.0, yaw=1.57079))
+            smach.Sequence.add("GO_TO_OBSTACLES", fly_drone.NodeState(x=0.0, y=0.0, yaw=-1.57079))
 
             # Evitar obstaculos (nice)
-            smach.Sequence.add("AVOID_OBSTACLES", ctrl_vision.CtrlVisNodeState(target_class="obstacle", action_flag=False, pos_flag=True))
+            smach.Sequence.add("AVOID_OBSTACLES", ctrl_vision.CtrlVisNodeState(target_class="Postes", action_flag=False, pos_flag=True))
 
             # Centrarse en aruco para pintar tu raya (verificar distancias x,y,z NOTA: las distancias son conforme 
             # al marco de referencia del ARUCO no del DRON)
-            smach.Sequence.add("ARUCO_CONTROL", aruco_control.NodeState(x_distance=0.0, y_distance=0.0, z_distance=2.0))
+            smach.Sequence.add("ARUCO_CONTROL", aruco_control_state.NodeState(x_distance=0.0, y_distance=0.0, z_distance=1.0))
             
            
 
