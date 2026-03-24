@@ -44,6 +44,7 @@ setup(
             "indoor_p2 = imav25.indoor_p2:main",
             "indoor_p3 = imav25.indoor_p3:main",
             "testing_smach = imav25.testing_smach:main",
+            "ultimate_smach = imav25.ultimate_smach:main",
             "aruco_control_state = imav25.aruco_control_state:main"
         ],
     },

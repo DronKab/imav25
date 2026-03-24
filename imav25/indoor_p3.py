@@ -32,7 +32,7 @@ class IndoorSmach(Node):
 
             # Centrarse en aruco para pintar tu raya (verificar distancias x,y,z NOTA: las distancias son conforme 
             # al marco de referencia del ARUCO no del DRON)
-            smach.Sequence.add("ARUCO_CONTROL", aruco_control.NodeState(x_distance=0.0, y_distance=0.0, z_distance=1.0))
+            smach.Sequence.add("ARUCO_CONTROL", aruco_control.NodeState(x_distance=0.0, y_distance=0.0, z_distance=0.5))
             
            
 

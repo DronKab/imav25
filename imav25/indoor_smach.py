@@ -36,7 +36,7 @@ class IndoorSmach(Node):
             smach.Sequence.add("CTRL_VIS_TUNNEL", ctrl_vision.CtrlVisNodeState(target_class="Azul", action_flag=True, pos_flag=True))
 
             # Cruzar tunel (distancia necesaria para cruzar tuneles)
-            smach.Sequence.add("CROSS_TUNNEL", fly_drone.NodeState(x=3.0, y=0.0, yaw=-1.57079))
+            smach.Sequence.add("CROSS_TUNNEL", fly_drone.NodeState(x=3.0, y=0.0, yaw=-90.0))
 
             # Acercarse a obstaculos (punto para acercarse a obstaculos) ver hacia el pizarron
             smach.Sequence.add("GO_TO_OBSTACLES", fly_drone.NodeState(x=1.5, y=0.5, yaw=0.0))
@@ -52,7 +52,7 @@ class IndoorSmach(Node):
             smach.Sequence.add("DRAW_LINE", fly_drone.NodeState(x=0.0, y=-1.5, yaw=0.0))
 
             # Quitarse del pizarron (verificar el punto x,y y la orientacion)
-            smach.Sequence.add("MOVE_FROM_WB", fly_drone.NodeState(x=-0.5, y=0.0, yaw=-1.57079))
+            smach.Sequence.add("MOVE_FROM_WB", fly_drone.NodeState(x=-0.5, y=0.0, yaw=-90.0))
 
             # Busca plataforma lejana (nice)
             smach.Sequence.add("FIND_FAR_PLATFORM", ctrl_vision.CtrlVisNodeState(target_class="Plataforma", action_flag=True, pos_flag=True))
