@@ -23,7 +23,7 @@ class IndoorSmach(Node):
             # smach.Sequence.add("HEIGHT_takeoff", smach.CBState(self.control_height, input_keys=["altura"], cb_args=[1.0], outcomes=["succeeded"]))
             # smach.Sequence.add("CENTER_TUNNEL", tunnel_detect.NodeState())
             # smach.Sequence.add("GOTO_TUNNELS", goto_zone.NodeState(1.0, 1.0, 90))
-            smach.Sequence.add("CONTROL_TEST", ctrl_vision.CtrlVisNodeState(target_class="class2", action_flag=True))
+            smach.Sequence.add("CONTROL_TEST", ctrl_vision.CtrlVisNodeState(target_class="class2", action_flag=True, pos_flag=True))
 
         # Start server for state machine visualization
         server = smach_ros.IntrospectionServer('indoor_smach_server', sq, '/SM_ROOT')
