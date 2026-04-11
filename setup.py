@@ -7,12 +7,18 @@ package_name = 'imav25'
 setup(
     name=package_name,
     version='0.0.0',
-    packages=find_packages(exclude=['test']),
+    packages=['imav25'],
     data_files=[
         ('share/ament_index/resource_index/packages',
             ['resource/' + package_name]),
         ('share/' + package_name, ['package.xml']),
-        (os.path.join('share', package_name), glob('launch/*.launch.py'))
+        # Copia los archivos launch
+        (os.path.join('share', package_name, 'launch'), glob('launch/*.launch.py')),
+        
+        # --- ESTA ES LA PARTE CLAVE ---
+        # Copia el modelo .blob y cualquier archivo en la carpeta tmr_model
+        (os.path.join('share', package_name, 'resources/tmr_model'), 
+         glob('resources/tmr_model/*.blob')),
     ],
     install_requires=['setuptools'],
     zip_safe=True,
@@ -24,21 +30,14 @@ setup(
         'console_scripts': [
             "px4_driver = imav25.px4_driver:main",
             "move_drone = imav25.move_drone:main",
-            "take_photos = imav25.take_photos:main",
-            "tunnel_detect = imav25.tunnel_detect:main",
-            "platform_detect = imav25.platform_detect:main",
-            "landing_platform = imav25.landing_platform:main",
-            "cross_tunnel = imav25.cross_tunnel:main",
-            "keyboard = imav25.keyboard:main"
+            "keyboard = imav25.keyboard:main",
             "aruco_control = imav25.aruco_control:main",
-            "save_pos = imav25.save_pos:main",
-            "save_pos_image = imav25.save_pos_image:main",
-            "whiteboard_detect = imav25.whiteboard_detect:main",
-            "goto_whiteboard = imav25.goto_whiteboard:main",
             "goto_zone = imav25.goto_zone:main",
-            "start_msg = imav24.start_msg:main",
+            "start_msg = imav25.start_msg:main", 
             "vision_yolo_node = imav25.vision_yolo_node:main",
             "fly_drone = imav25.fly_drone:main",
+            "classes_publishers = imav25.classes_publishers:main",
+            "ctrl_vision = imav25.ctrl_vision:main",
             "indoor_smach = imav25.indoor_smach:main"
         ],
     },
