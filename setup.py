@@ -38,6 +38,7 @@ setup(
             "goto_zone = imav25.goto_zone:main",
             "start_msg = imav24.start_msg:main",
             "vision_yolo_node = imav25.vision_yolo_node:main",
+            "fly_drone = imav25.fly_drone:main",
             "indoor_smach = imav25.indoor_smach:main"
         ],
     },
