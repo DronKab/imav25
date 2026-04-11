@@ -5,34 +5,26 @@ Node name: vision_yolo_node
 Publisher(s): /oak/rgb/image_raw (Message Type: Image)
               /oak/nn/detections (Message Type: Detection2DArray)
 
-Parameter(s): None
-
-Variable(s): - x_error, y_error (Integer): Number of pixels between the center of
-                the object detected and the center of the Image.
-             - integral_x, integral_y (Integer): Accumulative error from both axis,
-                used to add the integral part to the PID controller.
-             -prev_error_x, prev_error_y (Integer): It takes the previous iteration
-                value of the variables x_error and y_error, used to add the derivative
-                part to the PID controller.
-
 Constant(s): -IMG_W, IMG_H (Integer): Dimensions of the image (input to the ANN), height and width
                 in pixels. Usually they have the same value, they are used to initialize the pipeline
                 in the OAK-D camera and to get the coordinates of the bounding boxes in pixels.
-             -CONF_THRESH (Float): Value between 0 and 1, 
-             -ki_x, ki_y (Float): Integral constant values for x-axis and y-axis movement
-                in the PID controller. It works with the accumulative error measuring. Increment
-                this value could help to avoid stationary errors.
-             -kd_x, kd_y (Float): Derivative constant values for x-axis and y-axis movement
-                in the PID controller. It works with the difference between the actual and 
-                the previous measures. Increment this value could help to avoid overshooting.
-             -ts (Float): Sample Time. It works with the time gap between each iteration, it's
-                useful to get a working PID controller because of the integral and derivative part.
-             -max_vel (Float): It indicates a limit velocity for both axis, it's a safety element
-                to avoid getting velocities that might drive to dangerous drone movements.
-             -threshold (Integer): RECOMMENDED. It's used to create a gap near the target, to consider
-               that the drone is centered, or to completely avoid the obstacle.
+             -CONF_THRESH (Float): Value between 0 and 1, it's the normalized value of the percentage
+                of the confidence threshold, the minimum value to consider the hypothesis correct.
+             -IOU_THRESH (Float):  Value between 0 and 1, it's the normalized value of the percentage
+                of the Intersection over Union threshold, this value helps to erase multiple detections
+                of the same object (superposition).
+             -NUM_CLASSES (Integer): Number of classes in the ANN (Artificial Neural Network), it has to
+                match with the values in the json file in the resources/tmr_model folder. 
+             -LABEL_MAP (String Array): Array with the classes names in training order, it doesn't matter
+                if it matches or not the original names (in the json file), but it is highly recommended.
+             -HEADS (Struct: String, Integer): The data in the struct is layer_name, grid_size. These data
+                is used to access the output data of the tensors from the OAK-D pipeline (the value set shall
+                not be changed).
 
-Description: 
+Description: This node must be launched in the beginning. This node initialize the OAK-D camera pipeline by
+             setting up the model and the values needed to run that model, it also get the tensors from the 
+             OAK-D camera and publish the detections into a topic (/oak/nn/detections) and the raw image
+             from the camera into another (/oak/rgb/image_raw).
 """
 
 import rclpy

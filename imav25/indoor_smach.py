@@ -21,6 +21,7 @@ class IndoorSmach(Node):
             # smach.Sequence.add("WAIT_FOR_START_MSG", start_msg.NodeState())
             # smach.Sequence.add("INITIAL TAKEOFF", smach.CBState(self.takeoff, outcomes=["succeeded"]))
             smach.Sequence.add("HEIGHT_takeoff", smach.CBState(self.control_height, input_keys=["altura"], cb_args=[1.0], outcomes=["succeeded"]))
+            #smach.Sequence.add("CENTER_TUNNEL", tunnel_detect.NodeState())
             smach.Sequence.add("GOTO_TUNNELS", goto_zone.NodeState(1.0, 1.0, 90))
 
         # Start server for state machine visualization
