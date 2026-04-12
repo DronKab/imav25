@@ -13,16 +13,12 @@ def generate_launch_description():
         output="screen"
     )
 
+    # change username
     px4_sitl = ExecuteProcess(
         cmd=[
             "/bin/bash", "-lc",
             "cd /home/lucycv_u22/PX4-Autopilot && HEADLESS=1 make px4_sitl gz_x500"
         ],
-        output="screen"
-    )
-
-    microxrce_agent = ExecuteProcess(
-        cmd=["MicroXRCEAgent", "udp4", "--port", "8888"],
         output="screen"
     )
 
@@ -35,6 +31,11 @@ def generate_launch_description():
             "/camera/image_raw@sensor_msgs/msg/Image[ignition.msgs.Image",
             "/camera/camera_info@sensor_msgs/msg/CameraInfo[ignition.msgs.CameraInfo",
         ],
+        output="screen"
+    )
+
+    microxrce_agent = ExecuteProcess(
+        cmd=["MicroXRCEAgent", "udp4", "--port", "8888"],
         output="screen"
     )
 
@@ -57,14 +58,14 @@ def generate_launch_description():
     )
 
     aruco_detections_node = Node(
-    package="aruco_opencv",
-    executable="aruco_tracker_autostart",
-    output="screen",
-    parameters=[{
-        "cam_base_topic":"/camera/image_raw",
-        "marker_dict":"5X5_1000"
-    }]
-)
+        package="aruco_opencv",
+        executable="aruco_tracker_autostart",
+        output="screen",
+        parameters=[{
+            "cam_base_topic":"/camera/image_raw",
+            "marker_dict":"5X5_1000"
+        }]
+    )
 
     return LaunchDescription([
         microxrce_agent,
