@@ -31,7 +31,7 @@ class MoveDroneNode(Node):
         self.do_height_control_pub.publish(do_height_control_msg)
 
         if enable_button < len(msg.buttons) and msg.buttons[enable_button] == 1:
-            roll  = msg.axes[4]  # roll
+            roll  = -msg.axes[4]  # roll
             pitch  = msg.axes[3]  # pitch
             yaw = msg.axes[0]  # yaw
             z = msg.axes[1]  # z

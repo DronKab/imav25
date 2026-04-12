@@ -1,10 +1,12 @@
 from launch import LaunchDescription
 from launch_ros.actions import Node
-from launch.actions import ExecuteProcess, TimerAction
+from launch.actions import ExecuteProcess, TimerAction, RegisterEventHandler
+from launch.event_handlers import OnProcessStart
 
 def generate_launch_description():
-    # gazebo and px4 execution
-    # change username
+
+    # execute Gazebo
+    # change the username
     gz_sim = ExecuteProcess(
         cmd=[
             "/bin/bash", "-lc",
@@ -13,7 +15,8 @@ def generate_launch_description():
         output="screen"
     )
 
-    # change username
+    # execute PX4 SITL 
+    # change the username
     px4_sitl = ExecuteProcess(
         cmd=[
             "/bin/bash", "-lc",
@@ -22,6 +25,13 @@ def generate_launch_description():
         output="screen"
     )
 
+    # Micro XRCE Agent
+    microxrce_agent = ExecuteProcess(
+        cmd=["MicroXRCEAgent", "udp4", "--port", "8888"],
+        output="screen"
+    )
+
+    # run Gazebo Bridge 
     gz_bridge = Node(
         package="ros_gz_bridge",
         executable="parameter_bridge",
@@ -34,43 +44,92 @@ def generate_launch_description():
         output="screen"
     )
 
-    microxrce_agent = ExecuteProcess(
-        cmd=["MicroXRCEAgent", "udp4", "--port", "8888"],
-        output="screen"
-    )
-
+    # run px4_driver node 
     px4_driver_node = Node(
         package="imav25",
         executable="px4_driver",
         output="screen"
     )
 
+    # run joy_node for move_drone
     joy_node = Node(
         package="joy",
         executable="joy_node",
         name="joy_node",
         output="screen",
         parameters=[{
-            "dev": "/dev/input/js0",  
+            "dev": "/dev/input/js0",
             "deadzone": 0.05,
             "autorepeat_rate": 20.0
         }]
     )
 
+    # run aruco_tracker node
     aruco_detections_node = Node(
         package="aruco_opencv",
         executable="aruco_tracker_autostart",
         output="screen",
         parameters=[{
-            "cam_base_topic":"/camera/image_raw",
-            "marker_dict":"5X5_1000"
+            "cam_base_topic": "/camera/image_raw",
+            "marker_dict": "5X5_1000"
         }]
     )
 
+    # Gazebo starts and after 7s PX4 starts
+    start_px4 = RegisterEventHandler(
+        OnProcessStart(
+            target_action=gz_sim,
+            on_start=[
+                TimerAction(period=7.0, actions=[px4_sitl])
+            ]
+        )
+    )
+
+    # despues de PX4 + 3s inician el bridge y el Agent
+    start_bridge_agent = RegisterEventHandler(
+        OnProcessStart(
+            target_action=px4_sitl,
+            on_start=[
+                TimerAction(period=3.0, actions=[gz_bridge, microxrce_agent])
+            ]
+        )
+    )
+
+    # despues del Agent + 2s inicia el px4_driver
+    start_driver = RegisterEventHandler(
+        OnProcessStart(
+            target_action=microxrce_agent,
+            on_start=[
+                TimerAction(period=2.0, actions=[px4_driver_node])
+            ]
+        )
+    )
+
+    # despues del driver  +3s inicia el joy_node 
+    start_joy = RegisterEventHandler(
+        OnProcessStart(
+            target_action=px4_driver_node,
+            on_start=[
+                TimerAction(period=3.0, actions=[joy_node])
+            ]
+        )
+    )
+
+    # despues del joy_node + 3s inicia el aruco_tracker
+    start_aruco = RegisterEventHandler(
+        OnProcessStart(
+            target_action=joy_node,
+            on_start=[
+                TimerAction(period=3.0, actions=[aruco_detections_node])
+            ]
+        )
+    )
+
     return LaunchDescription([
-        microxrce_agent,
         gz_sim,
-        px4_sitl,
-        TimerAction(period=8.0, actions=[gz_bridge]),
-        TimerAction(period=10.0, actions=[px4_driver_node, joy_node, aruco_detections_node]),
+        start_px4,
+        start_bridge_agent,
+        start_driver,
+        start_joy,
+        start_aruco,
     ])

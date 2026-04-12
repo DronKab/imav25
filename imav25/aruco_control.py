@@ -27,7 +27,7 @@ class ArucoControlNode(Node):
 
         self.x_distance = 0.0
         self.y_distance = 0.0
-        self.z_distance = 0.5
+        self.z_distance = 0.1
 
         self.px_gain = 1.0
         self.dx_gain = 0.3
@@ -45,17 +45,17 @@ class ArucoControlNode(Node):
         self.d_pitch = 0.0
         self.n_pitch = 0.0
 
-        self.x_error = 0.0
+        self.x_error = 0.1
         self.x_error_1 = 0.0
         self.x_output = 0.0
         self.x_output_1 = 0.0
 
-        self.y_error = 0.0
+        self.y_error = 0.1
         self.y_error_1 = 0.0
         self.y_output = 0.0
         self.y_output_1 = 0.0
 
-        self.z_error = 0.0
+        self.z_error = 0.1
         self.z_error_1 = 0.0
         self.z_output = 0.0
         self.z_output_1 = 0.0
@@ -136,7 +136,7 @@ class ArucoControlNode(Node):
             self.pitch_error = self.last_known_pitch * 0.02
         
         # self.get_logger().info(f"Errores: x={self.x_error}, y={self.y_error}, z={self.z_error}, pitch={self.pitch_error}")
-        if (abs(self.x_error) > 0.1 or abs(self.y_error) > 0.1 or abs(self.z_error) > 0.1 or abs(self.pitch_error) > 5):
+        if (abs(self.x_error) >= 0.1 or abs(self.y_error) >= 0.1 or abs(self.z_error) >= 0.1 or abs(self.pitch_error) >= 5):
             if (abs(self.x_error) > 0.1 or abs(self.y_error) > 0.1 or abs(self.y_error) > 0.1):
                 if (abs(self.x_error) > 0.1):
                     px_action = self.x_error * self.px_gain
