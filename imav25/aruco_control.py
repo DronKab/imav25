@@ -27,13 +27,13 @@ class ArucoControlNode(Node):
 
         self.x_distance = 0.0
         self.y_distance = 0.0
-        self.z_distance = 0.1
+        self.z_distance = 0.5
 
         self.px_gain = 1.0
         self.dx_gain = 0.3
         self.nx_filter = 0.3
 
-        self.py_gain = 1.0
+        self.py_gain = 1.5
         self.dy_gain = 0.3
         self.ny_filter = 0.3
 
@@ -50,7 +50,7 @@ class ArucoControlNode(Node):
         self.x_output = 0.0
         self.x_output_1 = 0.0
 
-        self.y_error = 0.1
+        self.y_error = 0.0
         self.y_error_1 = 0.0
         self.y_output = 0.0
         self.y_output_1 = 0.0
@@ -77,6 +77,9 @@ class ArucoControlNode(Node):
         self.last_known_y = 0.0
         self.last_known_z = 0.0
         self.last_known_pitch = 0.0
+
+        self.linear_limit = 0.1
+        self.angular_limit = 5
         
         self.ts = 0.05
         self.heartbeat_timer = self.create_timer(self.ts, self.control)
@@ -134,11 +137,11 @@ class ArucoControlNode(Node):
             self.y_error = self.last_known_y * 0.02
             self.z_error = self.last_known_z * 0.02
             self.pitch_error = self.last_known_pitch * 0.02
-        
-        # self.get_logger().info(f"Errores: x={self.x_error}, y={self.y_error}, z={self.z_error}, pitch={self.pitch_error}")
-        if (abs(self.x_error) >= 0.1 or abs(self.y_error) >= 0.1 or abs(self.z_error) >= 0.1 or abs(self.pitch_error) >= 5):
-            if (abs(self.x_error) > 0.1 or abs(self.y_error) > 0.1 or abs(self.y_error) > 0.1):
-                if (abs(self.x_error) > 0.1):
+
+        self.get_logger().info(f"Errores: x={self.x_error}, y={self.y_error}, z={self.z_error}, pitch={self.pitch_error}")
+        if (abs(self.x_error) >= self.linear_limit or abs(self.y_error) >= self.linear_limit or abs(self.z_error) >= self.linear_limit or abs(self.pitch_error) >= self.angular_limit):
+            if (abs(self.x_error) > self.linear_limit or abs(self.y_error) > self.linear_limit or abs(self.y_error) > self.linear_limit):
+                if (abs(self.x_error) > self.linear_limit):
                     px_action = self.x_error * self.px_gain
                     # ix_action = self.x_output_1 + self.x_error * self.ix_gain * self.ts
                     dx_action = self.x_output_1 * (self.nx_filter * self.dx_gain * (self.x_error - self.x_error_1)) / (1 + self.nx_filter * self.ts)
@@ -153,7 +156,7 @@ class ArucoControlNode(Node):
                     self.x_error_1 = self.x_error
                     self.x_output_1 = self.x_output
 
-                if (abs(self.y_error) > 0.1):
+                if (abs(self.y_error) > self.linear_limit):
                     py_action = self.y_error * self.py_gain
                     # iy_action = self.y_output_1 + self.y_error * self.iy_gain * self.ts
                     dy_action = self.y_output_1 * (self.ny_filter * self.dy_gain * (self.y_error - self.y_error_1)) / (1 + self.ny_filter * self.ts)
@@ -168,7 +171,7 @@ class ArucoControlNode(Node):
                     self.y_error_1 = self.y_error
                     self.y_output_1 = self.y_output
 
-                if (abs(self.z_error) > 0.05):
+                if (abs(self.z_error) > self.linear_limit):
                     pz_action = self.z_error * self.pz_gain
                     # iz_action = self.z_output_1 + self.z_error * self.iz_gain * self.ts
                     dz_action = self.z_output_1 * (self.nz_filter * self.dz_gain * (self.z_error - self.z_error_1)) / (1 + self.nz_filter * self.ts)
@@ -201,7 +204,7 @@ class ArucoControlNode(Node):
                 self.z_error_1 = self.z_error
                 self.z_output_1 = self.z_output
 
-                if (abs(self.pitch_error) > 5):
+                if (abs(self.pitch_error) > self.angular_limit):
                     p_pitch_action = self.pitch_error * self.p_pitch
                     # i_pitch_action = self.pitch_output_1 + self.pitch_error * self.i_pitch * self.ts
                     d_pitch_action = self.pitch_output_1 * (self.n_pitch * self.d_pitch * (self.pitch_error - self.pitch_error_1)) / (1 + self.n_pitch * self.ts)
@@ -244,7 +247,7 @@ class ArucoControlNode(Node):
             self.pitch_error_1 = self.pitch_error
             self.pitch_output_1 = self.pitch_output
 
-            self.get_logger().info('Ready to draw')
+            self.get_logger().info('# # # # # # # Ready to draw # # # # # # #')
                 
 
         if abs(self.x_output) > self.max_vel:
@@ -272,22 +275,9 @@ class ArucoControlNode(Node):
                 self.pitch_output = -self.max_vel_yaw
 
         msg.linear.x = -self.z_output
-        msg.linear.y = self.x_output
+        msg.linear.y = -self.x_output
         msg.linear.z = self.y_output
         msg.angular.z = self.pitch_output
-
-        # self.get_logger().info(f"Angulos: roll={self.roll_error}, pitch={self.pitch_error}, yaw={self.yaw}") 
-        # self.get_logger().info(f"Salidas: x={self.x_output}, y={self.y_output}, z={self.z_output}")
-        
-        """
-        self.get_logger().info(f"Errores: pitch={self.pitch_error}")
-        self.get_logger().info(f"Mensajes: yaw={msg.angular.z}")
-
-        msg.linear.x = 0.0
-        msg.linear.y = 0.0
-        msg.linear.z = 0.0
-        msg.angular.z = 0.0
-        """
         
         self.vel_pub.publish(msg)
        
