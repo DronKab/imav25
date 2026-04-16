@@ -42,7 +42,7 @@ from ament_index_python.packages import get_package_share_directory
 
 IMG_W, IMG_H = 640, 640
 CONF_THRESH  = 0.45
-IOU_THRESH   = 0.45
+IOU_THRESH   = 0.6
 NUM_CLASSES  = 4
 
 LABEL_MAP = ["class0", "class1", "class2", "class3"]

@@ -22,7 +22,7 @@ class CtrlVisNodeState(State):
 
     def execute(self, userdata):
         self.node = VisualDroneControlNode(
-            target_class=self.target_class,
+            target_class=self.target_class, 
             action_flag=self.action_flag,
             pos_flag=self.pos_flag
         )
@@ -133,6 +133,7 @@ class VisualDroneControlNode(Node):
 
             deriv_y = (self.current_y_error - self.prev_error_y) / dt
             y_vel = (self.kp_y * self.current_y_error) + (self.kd_y * deriv_y)
+    
         else:
             # Centrado conseguido → avanzar si modo centrar y objeto visible
             if self.action_flag and self.object_detected:
@@ -161,7 +162,8 @@ class VisualDroneControlNode(Node):
         self.prev_error_x = self.current_x_error
         self.prev_error_y = self.current_y_error
 
-        if self.exit_counter > 50:
+        # Condición de salida para SMACH (ejemplo: 50 iteraciones centrado)
+        if self.exit_counter > 75:
             raise ExitOk
 
 
