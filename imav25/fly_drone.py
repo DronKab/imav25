@@ -13,9 +13,10 @@ class ExitOk(Exception):
 class NodeState(State):
     def __init__(self, x=0.0, y=0.0, yaw=0.0):
         super().__init__(outcomes=['succeeded', 'aborted'])
-        self.x = x
-        self.y = y
-        self.yaw = yaw
+        # estos puntos son del frame del drone (NO SON GLOBALES)
+        self.x = x # en metros
+        self.y = y # en metros
+        self.yaw = yaw # en rad/s
 
     def execute(self, userdata):
         try:
