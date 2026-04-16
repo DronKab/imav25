@@ -25,6 +25,13 @@ def generate_launch_description():
             output="screen"
         ),
 
+        Node(
+            package="imav25",
+            executable="classes_publishers",
+            name="classes_publishers",
+            output="screen"
+        ),
+
         # Detección de ArUcos — escucha /oak/rgb y /oak/camera_info
         Node(
             package="aruco_opencv",

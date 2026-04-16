@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 import rclpy
+import rclpy.executors
 from rclpy.node import Node
 from std_msgs.msg import Int32MultiArray, Bool
-from vision_msgs.msg import Detection2DArray
 from geometry_msgs.msg import Twist
 from smach import State
 import time
@@ -12,163 +12,162 @@ class ExitOk(Exception):
     pass
 
 class CtrlVisNodeState(State):
-    def __init__(self, target_class="class2", action_flag=True):
+    def __init__(self, target_class="tunnel", action_flag=True, pos_flag=True):
         # action_flag: True = Centrarse, False = Evitar
+        # pos_flag: True = Camara al frente, False = Camara hacia abajo
         State.__init__(self, outcomes=["succeeded", "aborted"])
         self.target_class = target_class
         self.action_flag = action_flag
+        self.pos_flag = pos_flag
 
     def execute(self, userdata):
         self.node = VisualDroneControlNode(
-            target_class=self.target_class, 
-            action_flag=self.action_flag
+            target_class=self.target_class,
+            action_flag=self.action_flag,
+            pos_flag=self.pos_flag
         )
+        executor = rclpy.executors.SingleThreadedExecutor()
+        executor.add_node(self.node)
         try:
-            rclpy.spin(self.node)
+            while rclpy.ok():
+                executor.spin_once(timeout_sec=0.05)
         except ExitOk:
             self.node.get_logger().info("Estado completado con éxito.")
             return "succeeded"
+        except (KeyboardInterrupt, rclpy.executors.ExternalShutdownException):
+            return "aborted"
         except Exception as e:
             self.node.get_logger().error(f"Error en el estado: {e}")
             return "aborted"
         finally:
+            executor.remove_node(self.node)
             self.node.destroy_node()
 
+
 class VisualDroneControlNode(Node):
-    def __init__(self, target_class, action_flag):
+    def __init__(self, target_class, action_flag, pos_flag):
         super().__init__('ctrl_vision')
-        
-        # Parámetros de misión
+
         self.target_class = target_class
         self.action_flag = action_flag
+        self.pos_flag = pos_flag
         self.exit_counter = 0
-        
-        # Configuración de tópicos según target_class
+
+        # Suscribirse al tópico de error ya calculado por classes_publishers
         topic_map = {
-            "tunnel": "/tunnel_error",
+            "tunnel":   "/tunnel_error",
             "obstacle": "/obstacle_error",
-            "wb": "/wb_error",
+            "wb":       "/wb_error",
             "far_plat": "/far_plat_error",
             "top_plat": "/top_plat_error"
         }
-        # Seleccionamos el tópico, por defecto usamos tunnel si no coincide
-        pub_topic = topic_map.get(self.target_class, "/tunnel_error")
-        
-        # Publicadores y Suscriptores
-        self.error_pub = self.create_publisher(Int32MultiArray, pub_topic, 10)
-        self.cmd_pub = self.create_publisher(Twist, '/px4_driver/cmd_vel', 10)
-        self.height_ctrl_pub = self.create_publisher(Bool, "/px4_driver/do_height_control", 10)
-        
-        self.detection_sub = self.create_subscription(
-            Detection2DArray, '/oak/nn/detections', self.detection_callback, 10)
+        sub_topic = topic_map.get(self.target_class, "/tunnel_error")
 
-        # Variables de Control
-        self.center_x = 320.0
-        self.center_y = 320.0
+        self.error_sub   = self.create_subscription(
+            Int32MultiArray, sub_topic, self.error_callback, 10)
+        self.cmd_pub         = self.create_publisher(Twist, '/px4_driver/cmd_vel', 10)
+        self.height_ctrl_pub = self.create_publisher(Bool, "/px4_driver/do_height_control", 10)
+
+        # Variables de control
         self.current_x_error = 0
         self.current_y_error = 0
-        self.object_detected = False
-        
-        # PID Constants
+        self.object_detected = False  # True mientras lleguen mensajes de error
+
+        # PID
         self.kp_x, self.kd_x = 0.002, 0.05
         self.kp_y, self.kd_y = 0.002, 0.05
         self.prev_error_x = 0.0
         self.prev_error_y = 0.0
         self.max_vel = 0.5
-        
-        # Timer de Control (50Hz)
+
+        # Timer de control (50 Hz)
         self.ts = 0.02
         self.timer = self.create_timer(self.ts, self.control_loop)
         self.last_time = time.time()
 
-    def detection_callback(self, msg):
-        found = False
-        for det in msg.detections:
-            for result in det.results:
-                if result.hypothesis.class_id == self.target_class and result.hypothesis.score > 0.45:
-                    # Calcular error en pixeles
-                    raw_x_error = int(det.bbox.center.position.x - self.center_x)
-                    raw_y_error = int(det.bbox.center.position.y - self.center_y)
-                    
-                    # LÓGICA DE ACCIÓN
-                    if self.action_flag:
-                        # Modo CENTRAR: Error directo
-                        self.current_x_error = raw_x_error
-                        self.current_y_error = raw_y_error
-                    else:
-                        # Modo EVITAR: Invertimos el error para que el PID empuje al lado contrario
-                        # Si el objeto está a la derecha (+), generamos error positivo para que el drone
-                        # (que invierte en el Twist) se mueva a la izquierda.
-                        self.current_x_error = -raw_x_error if abs(raw_x_error) < 150 else 0
-                        self.current_y_error = -raw_y_error if abs(raw_y_error) < 150 else 0
-                    
-                    # Publicar el error en el tópico seleccionado
-                    err_msg = Int32MultiArray()
-                    err_msg.data = [self.current_x_error, self.current_y_error]
-                    self.error_pub.publish(err_msg)
-                    
-                    found = True
-                    break
-        
-        self.object_detected = found
-        if not found:
-            self.current_x_error = 0
-            self.current_y_error = 0
+        # Timeout para detectar pérdida de objeto
+        self.last_detection_time = time.time()
+        self.detection_timeout = 0.5  # segundos sin mensaje → objeto perdido
+
+    def error_callback(self, msg):
+        """
+        Recibe [x_error, y_error] ya calculados por classes_publishers.
+        Solo aplica la lógica de acción (centrar vs evitar).
+        """
+        raw_x_error = msg.data[0]
+        raw_y_error = msg.data[1]
+
+        if self.action_flag:
+            # Modo CENTRAR: usar el error directo
+            self.current_x_error = raw_x_error
+            self.current_y_error = raw_y_error
+        else:
+            # Modo EVITAR: invertir el error para alejarse
+            self.current_x_error = -raw_x_error if abs(raw_x_error) < 150 else 0
+            self.current_y_error = -raw_y_error if abs(raw_y_error) < 150 else 0
+
+        self.object_detected = True
+        self.last_detection_time = time.time()
 
     def control_loop(self):
         dt = time.time() - self.last_time
         self.last_time = time.time()
-        
-        # Desactivar control de altura interno de PX4 driver si es necesario
+
+        # Si no llegan mensajes por más del timeout, objeto perdido
+        if time.time() - self.last_detection_time > self.detection_timeout:
+            self.object_detected = False
+            self.current_x_error = 0
+            self.current_y_error = 0
+
+        # Siempre delegamos altura al nodo externo
         h_msg = Bool()
-        h_msg.data = False
+        h_msg.data = True
         self.height_ctrl_pub.publish(h_msg)
 
-        x_vel, y_vel, z_vel = 0.0, 0.0, 0.0
-        
-        # Umbral de zona muerta (Deadband)
-        threshold = 45 if self.action_flag else 100 # Más margen para evitar
+        x_vel, y_vel = 0.0, 0.0
+        threshold = 30 if self.action_flag else 100
 
         if abs(self.current_x_error) > threshold or abs(self.current_y_error) > threshold:
-            # PID X (Lateral en el frame de la cámara, suele ser Y en el drone)
             deriv_x = (self.current_x_error - self.prev_error_x) / dt
             x_vel = (self.kp_x * self.current_x_error) + (self.kd_x * deriv_x)
-            
-            # PID Y (Vertical en cámara, suele ser Z o X en drone)
+
             deriv_y = (self.current_y_error - self.prev_error_y) / dt
             y_vel = (self.kp_y * self.current_y_error) + (self.kd_y * deriv_y)
-            
-            z_vel = 0.0 # Mantener posición mientras centra/evita
         else:
-            # Si está centrado (o lejos del objeto a evitar) y es modo centrar, avanzamos
+            # Centrado conseguido → avanzar si modo centrar y objeto visible
             if self.action_flag and self.object_detected:
-                z_vel = 0.3
                 self.exit_counter += 1
-            
-        # Saturación
+
         x_vel = max(min(x_vel, self.max_vel), -self.max_vel)
         y_vel = max(min(y_vel, self.max_vel), -self.max_vel)
 
-        # Mapeo a Twist (PX4 standard: x forward, y left, z up)
-        # Nota: Ajustado según tu código original
+        self.get_logger().info(
+            f"Errores: X={self.current_x_error} Y={self.current_y_error} | "
+            f"Vels: x={x_vel:.3f} y={y_vel:.3f} | "
+            f"Objeto: {self.object_detected}"
+        )
+
         twist = Twist()
-        twist.linear.y = -float(x_vel) 
-        twist.linear.z = -float(y_vel)
-        twist.linear.x = float(z_vel) 
+        if self.pos_flag == True:
+            twist.linear.y = -float(x_vel)
+            twist.linear.x = 0.0
+        else:
+            twist.linear.y = -float(x_vel)
+            twist.linear.x = float(y_vel)
+        twist.linear.z = 0.0
         twist.angular.z = 0.0
-        
         self.cmd_pub.publish(twist)
 
         self.prev_error_x = self.current_x_error
         self.prev_error_y = self.current_y_error
 
-        # Condición de salida para SMACH (ejemplo: 50 iteraciones centrado)
         if self.exit_counter > 50:
             raise ExitOk
-        
+
+
 def main(args=None):
     rclpy.init(args=args)
-    node = VisualDroneControlNode()
+    node = VisualDroneControlNode(target_class="tunnel", action_flag=True)
     rclpy.spin(node)
     node.destroy_node()
     rclpy.shutdown()
