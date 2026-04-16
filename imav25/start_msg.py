@@ -19,7 +19,7 @@ class NodeState(State):
             print(e)
             return "aborted"
 
-class StartNode(Node):
+class NodeStart(Node):
     def __init__(self):
         super().__init__("start_msg_node")
         self.get_logger().info("Waiting for message to start ...")

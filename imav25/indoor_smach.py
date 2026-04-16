@@ -3,7 +3,7 @@ from rclpy.node import Node
 import smach
 import smach_ros
 import time 
-from imav25 import start_msg, goto_zone, ctrl_vision
+from imav25 import start_msg, goto_zone, ctrl_vision, aruco_control, fly_drone
 from std_msgs.msg import Empty, Float32
 
 class IndoorSmach(Node):
@@ -18,12 +18,48 @@ class IndoorSmach(Node):
         sq = smach.Sequence(outcomes=["succeeded", "aborted", "preempted"], connector_outcome="succeeded")
 
         with sq:
-            # smach.Sequence.add("WAIT_FOR_START_MSG", start_msg.NodeState())
-            # smach.Sequence.add("INITIAL TAKEOFF", smach.CBState(self.takeoff, outcomes=["succeeded"]))
-            # smach.Sequence.add("HEIGHT_takeoff", smach.CBState(self.control_height, input_keys=["altura"], cb_args=[1.0], outcomes=["succeeded"]))
-            # smach.Sequence.add("CENTER_TUNNEL", tunnel_detect.NodeState())
-            # smach.Sequence.add("GOTO_TUNNELS", goto_zone.NodeState(1.0, 1.0, 90))
-            smach.Sequence.add("CONTROL_TEST", ctrl_vision.CtrlVisNodeState(target_class="class2", action_flag=True))
+            # Mensaje para comenzar (nice)
+            smach.Sequence.add("WAIT_FOR_START_MSG", start_msg.NodeState())
+            # el mensaje que se publica es: ros2 topic pub --once /wait_start_msg std_msgs/msg/Empty
+            
+            # Take off (nice)
+            smach.Sequence.add("INITIAL TAKEOFF", smach.CBState(self.takeoff, outcomes=["succeeded"]))
+
+            smach.Sequence.add("DELAY_TAKEOFF", smach.CBState(self.delay, input_keys=["secs"], cb_args=[10], outcomes=["succeeded"]))
+
+            """
+            # Altura para tuneles (verificar altura necesaria (o si es necesario ajustar altura)
+            smach.Sequence.add("HEIGHT_takeoff", smach.CBState(self.control_height, input_keys=["altura"], cb_args=[1.0], outcomes=["succeeded"]))
+            
+            # Centrarse en tunel (nice)
+            smach.Sequence.add("CTRL_VIS_TUNNEL", ctrl_vision.CtrlVisNodeState(target_class="tunnel", action_flag=True, pos_flag=True))
+
+            # Cruzar tunel (distancia necesaria para cruzar tuneles)
+            # smach.Sequence.add("CROSS_TUNNEL", fly_drone.NodeState(x=4.0, y=0.0, yaw=0.0))
+
+            # Acercarse a obstaculos (punto para acercarse a obstaculos)
+            smach.Sequence.add("GO_TO_OBSTACLES", fly_drone.NodeState(x=1.0, y=1.0, yaw=1.57079))
+
+            # Evitar obstaculos (nice)
+            smach.Sequence.add("AVOID_OBSTACLES", ctrl_vision.CtrlVisNodeState(target_class="obstacle", action_flag=False, pos_flag=True))
+            """
+
+            # Centrarse en aruco para pintar tu raya (verificar distancias x,y,z NOTA: las distancias son conforme 
+            # al marco de referencia del ARUCO no del DRON)
+            smach.Sequence.add("ARUCO_CONTROL", aruco_control.NodeState(x_distance=0.0, y_distance=0.0, z_distance=2.0))
+            
+            # Moverse para dibujar linea (ajustar distancia y signo en x)
+            smach.Sequence.add("DRAW_LINE", fly_drone.NodeState(x=0.0, y=1.5, yaw=0.0))
+            """
+            # Quitarse del pizarron (verificar el punto x,y y la orientacion)
+            smach.Sequence.add("MOVE_FROM_WB", fly_drone.NodeState(x=1.0, y=0.0, yaw=1.57079))
+
+            # Busca plataforma lejana (nice)
+            smach.Sequence.add("FIND_FAR_PLATFORM", ctrl_vision.CtrlVisNodeState(target_class="far_plat", action_flag=True, pos_flag=True))
+
+            # Busca plataforma abajo (nice)
+            smach.Sequence.add("FIND_PLATFORM", ctrl_vision.CtrlVisNodeState(target_class="top_plat", action_flag=True, pos_flag=False))
+            """
 
         # Start server for state machine visualization
         server = smach_ros.IntrospectionServer('indoor_smach_server', sq, '/SM_ROOT')
