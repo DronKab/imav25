@@ -274,7 +274,7 @@ class ArucoControlNode(Node):
         msg.linear.x = -self.z_output
         msg.linear.y = self.x_output
         msg.linear.z = self.y_output
-        msg.angular.z = self.pitch_output
+        msg.angular.z = -self.pitch_output
 
         # self.get_logger().info(f"Angulos: roll={self.roll_error}, pitch={self.pitch_error}, yaw={self.yaw}") 
         # self.get_logger().info(f"Salidas: x={self.x_output}, y={self.y_output}, z={self.z_output}")
