@@ -3,7 +3,7 @@ from rclpy.node import Node
 import smach
 import smach_ros
 import time 
-from imav25 import start_msg, goto_zone, ctrl_vision, aruco_control_state, fly_drone, landing_node
+from imav25 import start_msg, goto_zone, ctrl_vision, aruco_control_state, fly_drone, landing_node 
 from std_msgs.msg import Empty, Float32
 
 class IndoorSmach(Node):
@@ -13,9 +13,11 @@ class IndoorSmach(Node):
 
         self.takeoff_pub = self.create_publisher(Empty, "/px4_driver/takeoff", 10)
         self.change_height_pub = self.create_publisher(Float32, "/px4_driver/target_height", 10)
+        
 
         # Create state machine
         sq = smach.Sequence(outcomes=["succeeded", "aborted", "preempted"], connector_outcome="succeeded")
+
 
         with sq:
             # Mensaje para comenzar (nice)
@@ -36,33 +38,9 @@ class IndoorSmach(Node):
             # Cruzar tunel (distancia necesaria para cruzar tuneles)
             smach.Sequence.add("CROSS_TUNNEL", fly_drone.NodeState(x=3.0, y=0.0, yaw=0.0))
 
-            # Acercarse a obstaculos (punto para acercarse a obstaculos) ver hacia el pizarron
-            smach.Sequence.add("GO_TO_OBSTACLES", fly_drone.NodeState(x=0.0, y=0.0, yaw=1.57079))
-
-            # Evitar obstaculos (nice)
-            smach.Sequence.add("AVOID_OBSTACLES", ctrl_vision.CtrlVisNodeState(target_class="obstacle", action_flag=False, pos_flag=True))
-
-            # Centrarse en aruco para pintar tu raya (verificar distancias x,y,z NOTA: las distancias son conforme 
-            # al marco de referencia del ARUCO no del DRON)
-            smach.Sequence.add("ARUCO_CONTROL", aruco_control_state.NodeState(x_distance=0.0, y_distance=0.0, z_distance=2.0))
-            
-            # Moverse para dibujar linea (ajustar distancia y signo en x)
-            smach.Sequence.add("DRAW_LINE", fly_drone.NodeState(x=0.0, y=1.5, yaw=0.0))
-
-            # Quitarse del pizarron (verificar el punto x,y y la orientacion)
-            smach.Sequence.add("MOVE_FROM_WB", fly_drone.NodeState(x=-0.5, y=0.0, yaw=1.57079))
-
-            # Busca plataforma lejana (nice)
-            smach.Sequence.add("FIND_FAR_PLATFORM", ctrl_vision.CtrlVisNodeState(target_class="far_plat", action_flag=True, pos_flag=True))
-
-            smach.Sequence.add("HEIGHT_platform", smach.CBState(self.control_height, input_keys=["altura"], cb_args=[2.0], outcomes=["succeeded"]))
-
-            smach.Sequence.add("GO_TO_FAR_PLATFORM", fly_drone.NodeState(x=1.5, y=0.0, yaw=0.0))
-
-            # Busca plataforma abajo (nice)
-            smach.Sequence.add("FIND_PLATFORM", ctrl_vision.CtrlVisNodeState(target_class="top_plat", action_flag=True, pos_flag=False))
-
             smach.Sequence.add("LANDING", landing_node.NodeState())
+
+
 
         # Start server for state machine visualization
         server = smach_ros.IntrospectionServer('indoor_smach_server', sq, '/SM_ROOT')

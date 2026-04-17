@@ -41,7 +41,7 @@ class FlyDroneNode(Node):
 
         self.get_logger().info(f"Target: x={x_tar}, y={y_tar}, yaw={yaw_tar}")
 
-        self.cmd_pub = self.create_publisher(Twist, '/px4_driver/cmd_vel', 10)
+        self.cmd_pub = self.create_publisher(Twist, '/cmd_vel', 10)
 
         self.ts = 0.02  # 50 Hz
 

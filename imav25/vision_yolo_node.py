@@ -43,9 +43,9 @@ from ament_index_python.packages import get_package_share_directory
 IMG_W, IMG_H = 640, 640
 CONF_THRESH  = 0.45
 IOU_THRESH   = 0.6
-NUM_CLASSES  = 4
+NUM_CLASSES  = 5
 
-LABEL_MAP = ["class0", "class1", "class2", "class3"]
+LABEL_MAP = ["Azul", "Cajas", "Plataforma", "Postes", "Verde"]
 
 HEADS = [
     ("output1_yolov6r2", 80),
@@ -171,7 +171,8 @@ class VisionHostNode(dai.node.HostNode):
                 )
                 continue
 
-            raw = raw.reshape(9, grid_size, grid_size)
+            values_per_cell = 5 + NUM_CLASSES 
+            raw = raw.reshape(values_per_cell, grid_size, grid_size)
             raw = np.transpose(raw, (1, 2, 0))
 
             if not self._range_logged:
@@ -238,7 +239,7 @@ class DronkabVisionNode(Node):
 
         pkg_share = get_package_share_directory('imav25')
         blob_path = os.path.join(
-            pkg_share, 'resources', 'tmr_model', 'best_openvino_2022.1_6shave.blob'
+            pkg_share, 'resources', 'tmr_model', 'RedTMR2026-V1_openvino_2022.1_6shave.blob'
         )
 
         self.pipeline = dai.Pipeline()

@@ -12,7 +12,7 @@ class ExitOk(Exception):
     pass
 
 class CtrlVisNodeState(State):
-    def __init__(self, target_class="tunnel", action_flag=True, pos_flag=True):
+    def __init__(self, target_class="Azul", action_flag=True, pos_flag=True):
         # action_flag: True = Centrarse, False = Evitar
         # pos_flag: True = Camara al frente, False = Camara hacia abajo
         State.__init__(self, outcomes=["succeeded", "aborted"])
@@ -55,17 +55,16 @@ class VisualDroneControlNode(Node):
 
         # Suscribirse al tópico de error ya calculado por classes_publishers
         topic_map = {
-            "tunnel":   "/tunnel_error",
-            "obstacle": "/obstacle_error",
-            "wb":       "/wb_error",
-            "far_plat": "/far_plat_error",
-            "top_plat": "/top_plat_error"
+            "Azul":   "/tunnelA_error",
+            "Postes": "/obstacle_error",
+            "Plataforma": "/plat_error",
+            "Verde": "/tunnelV_error"
         }
         sub_topic = topic_map.get(self.target_class, "/tunnel_error")
 
         self.error_sub   = self.create_subscription(
             Int32MultiArray, sub_topic, self.error_callback, 10)
-        self.cmd_pub         = self.create_publisher(Twist, '/px4_driver/cmd_vel', 10)
+        self.cmd_pub         = self.create_publisher(Twist, '/cmd_vel', 10)
         self.height_ctrl_pub = self.create_publisher(Bool, "/px4_driver/do_height_control", 10)
 
         # Variables de control
@@ -101,6 +100,7 @@ class VisualDroneControlNode(Node):
             # Modo CENTRAR: usar el error directo
             self.current_x_error = raw_x_error
             self.current_y_error = raw_y_error
+
         else:
             # Modo EVITAR: invertir el error para alejarse
             self.current_x_error = -raw_x_error if abs(raw_x_error) < 150 else 0
@@ -151,10 +151,14 @@ class VisualDroneControlNode(Node):
         twist = Twist()
         if self.pos_flag == True:
             twist.linear.y = -float(x_vel)
-            twist.linear.x = 0.0
+            if self.action_flag == True:
+                twist.linear.x = 0.0
+            else:
+                twist.linear.x = 0.2
         else:
             twist.linear.y = -float(x_vel)
             twist.linear.x = float(y_vel)
+        
         twist.linear.z = 0.0
         twist.angular.z = 0.0
         self.cmd_pub.publish(twist)

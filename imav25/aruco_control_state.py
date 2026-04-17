@@ -13,7 +13,7 @@ class ExitOk(Exception):
     pass
 
 class NodeState(State):
-    def __init__(self, x_distance=0.0, y_distance=0.0, z_distance=0.5):
+    def __init__(self, x_distance=0.0, y_distance=0.0, z_distance=0.4):
         State.__init__(self, outcomes=["succeeded", "aborted"])
         self.x_distance = x_distance
         self.y_distance = y_distance
@@ -39,7 +39,7 @@ class ArucoControlNode(Node):
         super().__init__('aruco_control')
         self.get_logger().info('aruco_control node started')
 
-        self.vel_pub = self.create_publisher(Twist, '/px4_driver/cmd_vel', 10)
+        self.vel_pub = self.create_publisher(Twist, '/cmd_vel', 10)
         self.do_height_control_pub = self.create_publisher(Bool, "/px4_driver/do_height_control", 10)
 
         self.aruco_sub = self.create_subscription(ArucoDetection, "/aruco_detections", self.aruco_callback, 10)

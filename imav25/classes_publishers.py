@@ -25,7 +25,7 @@ from std_msgs.msg import Int32MultiArray
 from vision_msgs.msg import Detection2DArray  
 
 # ← Replace with your actual class names in the same order as LABEL_MAP
-LABEL_MAP = ["class0", "class1", "class2", "class3"]
+LABEL_MAP = ["Azul", "Cajas", "Plataforma", "Postes", "Verde"] 
 
 class ClassesPublishersNode(Node):
     def __init__(self):
@@ -39,11 +39,10 @@ class ClassesPublishersNode(Node):
             self.detection_callback,
             10
         )
-        self.error_tunnel = self.create_publisher(Int32MultiArray, '/tunnel_error', 10)
+        self.error_tunnelA = self.create_publisher(Int32MultiArray, '/tunnelA_error', 10)
+        self.error_tunnelV = self.create_publisher(Int32MultiArray, '/tunnelV_error', 10)
         self.error_obstacle = self.create_publisher(Int32MultiArray, '/obstacle_error', 10)
-        self.error_wb = self.create_publisher(Int32MultiArray, '/wb_error', 10)
-        self.error_far_plat = self.create_publisher(Int32MultiArray, '/far_plat_error', 10)
-        self.error_top_plat = self.create_publisher(Int32MultiArray, '/top_plat_error', 10)
+        self.error_platform = self.create_publisher(Int32MultiArray, '/plat_error', 10)
 
         self.center_x = 320.0  # IMG_W / 2
         self.center_y = 320.0  # IMG_H / 2
@@ -75,15 +74,14 @@ class ClassesPublishersNode(Node):
                     error_msg = Int32MultiArray()
                     error_msg.data = [x_error, y_error]
 
-                    if class_id == "class0":
-                        self.error_tunnel.publish(error_msg)
-                    elif class_id == "class1":
+                    if class_id == "Azul":
+                        self.error_tunnelA.publish(error_msg)
+                    elif class_id == "Postes":
                         self.error_obstacle.publish(error_msg)
-                    elif class_id == "class2":
-                        self.error_wb.publish(error_msg)
-                    elif class_id == "class3":
-                        self.error_far_plat.publish(error_msg)
-                        self.error_top_plat.publish(error_msg)
+                    elif class_id == "Plataforma":
+                        self.error_platform.publish(error_msg)
+                    elif class_id == "Verde":
+                        self.error_tunnelV.publish(error_msg)
 
                     self.get_logger().info(f"Error publicado: {error_msg.data}")
 

@@ -40,7 +40,7 @@ def generate_launch_description():
             output="screen",
             parameters=[{
                 "cam_base_topic":       "oak",    # genera /oak/rgb y /oak/camera_info
-                "marker_size":          0.10,
+                "marker_size":          0.2,
                 "marker_dict":          "5X5_1000",
                 "image_sub_compressed": False,
             }]

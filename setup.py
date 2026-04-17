@@ -38,7 +38,12 @@ setup(
             "fly_drone = imav25.fly_drone:main",
             "classes_publishers = imav25.classes_publishers:main",
             "ctrl_vision = imav25.ctrl_vision:main",
-            "indoor_smach = imav25.indoor_smach:main"
+            "landing_node = imav25.landing_node:main",
+            "indoor_smach = imav25.indoor_smach:main",
+            "indoor_p1 = imav25.indoor_p1:main",
+            "indoor_p2 = imav25.indoor_p2:main",
+            "testing_smach = imav25.testing_smach:main",
+            "aruco_control_state = imav25.aruco_control_state:main"
         ],
     },
 )
