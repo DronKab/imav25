@@ -18,6 +18,7 @@ class IndoorSmach(Node):
         sq = smach.Sequence(outcomes=["succeeded", "aborted", "preempted"], connector_outcome="succeeded")
 
         with sq:
+            """
             # Mensaje para comenzar (nice)
             smach.Sequence.add("WAIT_FOR_START_MSG", start_msg.NodeState())
             # el mensaje que se publica es: ros2 topic pub --once /wait_start_msg std_msgs/msg/Empty
@@ -41,11 +42,13 @@ class IndoorSmach(Node):
 
             # Evitar obstaculos (nice)
             smach.Sequence.add("AVOID_OBSTACLES", ctrl_vision.CtrlVisNodeState(target_class="obstacle", action_flag=False, pos_flag=True))
+            """
 
             # Centrarse en aruco para pintar tu raya (verificar distancias x,y,z NOTA: las distancias son conforme 
             # al marco de referencia del ARUCO no del DRON)
-            smach.Sequence.add("ARUCO_CONTROL", aruco_control.NodeState(x_distance=0.0, y_distance=0.0, z_distance=2.0))
+            smach.Sequence.add("ARUCO_CONTROL", aruco_control.NodeState(x_distance=0.0, y_distance=0.0, z_distance=0.5))
             
+            """
             # Moverse para dibujar linea (ajustar distancia y signo en x)
             smach.Sequence.add("DRAW_LINE", fly_drone.NodeState(x=0.0, y=1.5, yaw=0.0))
 
@@ -57,6 +60,7 @@ class IndoorSmach(Node):
 
             # Busca plataforma abajo (nice)
             smach.Sequence.add("FIND_PLATFORM", ctrl_vision.CtrlVisNodeState(target_class="top_plat", action_flag=True, pos_flag=False))
+            """
 
         # Start server for state machine visualization
         server = smach_ros.IntrospectionServer('indoor_smach_server', sq, '/SM_ROOT')
