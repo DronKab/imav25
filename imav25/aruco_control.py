@@ -25,8 +25,7 @@ class NodeState(State):
             rclpy.spin(node)
         except ExitOk:
             node.destroy_node()
-            rclpy.shutdown()
-            return 'succeeded'
+            return 'succeeded'  # ← Eliminado rclpy.shutdown() para no matar ROS2
         except Exception as e:
             print("Error en estado ArucoControl:", e)
             return 'aborted'
@@ -36,11 +35,10 @@ class ArucoControlNode(Node):
         super().__init__('aruco_control')
         self.get_logger().info('aruco_control node started')
 
-        self.vel_pub = self.create_publisher(Twist, '/px4_driver/cmd_vel', 10)
-
+        self.vel_pub = self.create_publisher(Twist, '/cmd_vel', 10)
         self.aruco_sub = self.create_subscription(ArucoDetection, "/aruco_detections", self.aruco_callback, 10)
 
-        self.aruco_goal = 100 
+        self.aruco_goal = 100
         self.aruco_visible = False
 
         self.x_distance = x_distance
@@ -88,7 +86,7 @@ class ArucoControlNode(Node):
 
         self.linear_limit = 0.05
         self.angular_limit = 10
-        
+
         self.ts = 0.05
         self.timer = self.create_timer(self.ts, self.control)
 
@@ -135,14 +133,21 @@ class ArucoControlNode(Node):
         msg = Twist()
 
         if not self.aruco_visible:
-            decay = 0.9
-            self.x_error = self.last_known_x * decay
-            self.y_error = self.last_known_y * decay
-            self.z_error = self.last_known_z * decay
+            # Forzar error en Z del ArUco para que el dron avance en X
+            # hasta volver a encontrar el marcador
+            self.x_error = 0.0
+            self.y_error = 0.0
+            self.z_error = self.z_distance + self.linear_limit + 0.1
             self.pitch_error = 0.0
 
+            # Resetear error anteriores para evitar spike derivativo al recuperar señal
+            self.x_error_1 = 0.0
+            self.y_error_1 = 0.0
+            self.z_error_1 = self.z_error
+            self.pitch_error_1 = 0.0
+
         self.get_logger().info(
-            f"Errores: x={self.x_error}, y={self.y_error}, z={self.z_error}, pitch={self.pitch_error}"
+            f"Errores: x={self.x_error:.3f}, y={self.y_error:.3f}, z={self.z_error:.3f}, pitch={self.pitch_error:.3f}"
         )
 
         flag_error = (
@@ -168,6 +173,7 @@ class ArucoControlNode(Node):
                     self.x_error_1 = self.x_error
                 else:
                     self.x_output = 0.0
+                    self.x_error_1 = 0.0  # ← Reset para evitar spike derivativo
 
                 if abs(self.y_error) > self.linear_limit:
                     self.y_output = (
@@ -177,6 +183,7 @@ class ArucoControlNode(Node):
                     self.y_error_1 = self.y_error
                 else:
                     self.y_output = 0.0
+                    self.y_error_1 = 0.0  # ← Reset para evitar spike derivativo
 
                 if abs(self.z_error) > self.linear_limit:
                     self.z_output = (
@@ -186,6 +193,7 @@ class ArucoControlNode(Node):
                     self.z_error_1 = self.z_error
                 else:
                     self.z_output = 0.0
+                    self.z_error_1 = 0.0  # ← Reset para evitar spike derivativo
 
                 self.pitch_output = 0.0
 
@@ -198,7 +206,7 @@ class ArucoControlNode(Node):
                     self.pitch_error_1 = self.pitch_error
                 else:
                     self.pitch_output = 0.0
-
+                    self.pitch_error_1 = 0.0  # ← Reset para evitar spike derivativo
 
         else:
             if self.aruco_visible:
@@ -213,11 +221,11 @@ class ArucoControlNode(Node):
         msg.linear.x = -self.z_output
         msg.linear.y = -self.x_output
         msg.linear.z = self.y_output
-        msg.angular.z = self.pitch_output
+        msg.angular.z = -self.pitch_output
 
         self.get_logger().info(
-                f"Mensajes: x={msg.linear.x}, y={msg.linear.y}, z={msg.linear.z}, yaw={msg.angular.z}"
-            )
+            f"Mensajes: x={msg.linear.x:.3f}, y={msg.linear.y:.3f}, z={msg.linear.z:.3f}, yaw={msg.angular.z:.3f}"
+        )
 
         self.vel_pub.publish(msg)
 

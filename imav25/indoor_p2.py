@@ -3,7 +3,7 @@ from rclpy.node import Node
 import smach
 import smach_ros
 import time 
-from imav25 import start_msg, goto_zone, ctrl_vision, fly_drone, aruco_control_state
+from imav25 import start_msg, goto_zone, ctrl_vision, fly_drone, aruco_control
 from std_msgs.msg import Empty, Float32
 
 class IndoorSmach(Node):
@@ -44,7 +44,7 @@ class IndoorSmach(Node):
 
             # Centrarse en aruco para pintar tu raya (verificar distancias x,y,z NOTA: las distancias son conforme 
             # al marco de referencia del ARUCO no del DRON)
-            smach.Sequence.add("ARUCO_CONTROL", aruco_control_state.NodeState(x_distance=0.0, y_distance=0.0, z_distance=1.0))
+            smach.Sequence.add("ARUCO_CONTROL", aruco_control.NodeState(x_distance=0.0, y_distance=0.0, z_distance=1.0))
             
            
 
