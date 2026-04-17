@@ -218,7 +218,7 @@ class ArucoControlNode(Node):
         self.z_output = max(-self.max_vel_z, min(self.max_vel_z, self.z_output))
         self.pitch_output = max(-self.max_vel_yaw, min(self.max_vel_yaw, self.pitch_output))
 
-        msg.linear.x = -self.z_output
+        msg.linear.x = self.z_output
         msg.linear.y = -self.x_output
         msg.linear.z = self.y_output
         msg.angular.z = -self.pitch_output

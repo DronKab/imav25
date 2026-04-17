@@ -174,7 +174,7 @@ class VisualDroneControlNode(Node):
 
 def main(args=None):
     rclpy.init(args=args)
-    node = VisualDroneControlNode(target_class="tunnel", action_flag=True)
+    node = VisualDroneControlNode(target_class="Azul", action_flag=True)
     rclpy.spin(node)
     node.destroy_node()
     rclpy.shutdown()
